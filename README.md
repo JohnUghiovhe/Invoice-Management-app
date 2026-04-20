@@ -96,7 +96,7 @@ It uses React + Tailwind on the client and Express + TypeScript on the server.
 │  ├─ middleware/errorHandler.ts
 │  ├─ store/
 │  │  ├─ invoiceStore.ts
-│  │  └─ invoices.json
+│  │  └─ data.json
 │  ├─ validation/invoiceSchema.ts
 │  └─ types.ts
 ├─ src/
@@ -145,7 +145,7 @@ React UI
   -> Express routes (/api/*)
   -> validation (Zod + query parser)
   -> store/business logic
-  -> JSON persistence (server/store/invoices.json)
+  -> JSON persistence (server/store/data.json)
 ```
 
 ### Frontend Architecture
@@ -246,7 +246,7 @@ PowerShell example:
 
 ```powershell
 $env:PORT="4000"
-$env:INVOICE_STORE_FILE="C:\temp\invoices.json"
+$env:INVOICE_STORE_FILE="C:\temp\data.json"
 ```
 
 ## Running the App
@@ -353,7 +353,7 @@ Recommended next step for a11y confidence:
 
 ### JSON file persistence instead of database
 
-- Decision: persist invoices in server/store/invoices.json
+- Decision: persist invoices in server/store/data.json
 - Benefit: zero infra setup and easy inspection
 - Trade-off: limited scalability and concurrent write safety
 

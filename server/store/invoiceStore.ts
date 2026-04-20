@@ -6,7 +6,7 @@ import { type Invoice, type InvoiceStatus, type UpsertInvoicePayload } from "../
 const STORE_DIR = path.resolve(process.cwd(), "server", "store");
 const STORE_FILE = process.env.INVOICE_STORE_FILE
   ? path.resolve(process.env.INVOICE_STORE_FILE)
-  : path.join(STORE_DIR, "invoices.json");
+  : path.join(STORE_DIR, "data.json");
 
 async function ensureStore(): Promise<void> {
   await mkdir(STORE_DIR, { recursive: true });

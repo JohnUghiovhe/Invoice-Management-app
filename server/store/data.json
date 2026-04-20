@@ -78,7 +78,7 @@
     "paymentTerms": 30,
     "clientName": "Priya Rao",
     "clientEmail": "priya@northstar.design",
-    "status": "paid",
+    "status": "pending",
     "senderAddress": {
       "street": "15 Ikeja GRA",
       "city": "Ikeja",
@@ -140,5 +140,44 @@
       }
     ],
     "total": 1500
+  },
+  {
+    "id": "AA1122",
+    "createdAt": "2026-04-08",
+    "paymentDue": "2026-05-08",
+    "description": "Design system audit",
+    "paymentTerms": 30,
+    "clientName": "Rita Okafor",
+    "clientEmail": "ritaokafor@northstar.design",
+    "status": "pending",
+    "senderAddress": {
+      "street": "15 Ikeja GRA",
+      "city": "Ikeja",
+      "postCode": "100271",
+      "country": "Nigeria"
+    },
+    "clientAddress": {
+      "street": "91 Park Lane",
+      "city": "Lekki",
+      "postCode": "106113",
+      "country": "Nigeria"
+    },
+    "items": [
+      {
+        "id": "KiThcpJw",
+        "name": "Audit workshop",
+        "quantity": 1,
+        "price": 900,
+        "total": 900
+      },
+      {
+        "id": "ygtej2LP",
+        "name": "Design recommendations",
+        "quantity": 1,
+        "price": 1100,
+        "total": 1100
+      }
+    ],
+    "total": 2000
   }
 ]

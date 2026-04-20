@@ -136,7 +136,7 @@ let app: Express;
 
 beforeAll(async () => {
   tempDir = await mkdtemp(path.join(os.tmpdir(), "invoice-app-tests-"));
-  storeFile = path.join(tempDir, "invoices.json");
+  storeFile = path.join(tempDir, "data.json");
   await writeFile(storeFile, JSON.stringify(seedInvoices, null, 2), "utf-8");
   process.env.INVOICE_STORE_FILE = storeFile;
 
