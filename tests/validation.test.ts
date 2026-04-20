@@ -48,7 +48,7 @@ describe("validateInvoice", () => {
         postCode: "",
         country: ""
       }
-    });
+    }) as unknown as Record<string, string>;
 
     expect(errors.clientName).toBe("Client name is required");
     expect(errors.clientEmail).toBe("Enter a valid email");

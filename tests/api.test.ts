@@ -3,6 +3,7 @@ import path from "node:path";
 import os from "node:os";
 import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import type { Express } from "express";
 
 const seedInvoices = [
   {
@@ -103,9 +104,35 @@ const seedInvoices = [
   }
 ];
 
-let tempDir;
-let storeFile;
-let app;
+type TestInvoicePayload = {
+  createdAt: string;
+  paymentDue: string;
+  description: string;
+  paymentTerms: number;
+  clientName: string;
+  clientEmail: string;
+  senderAddress: {
+    street: string;
+    city: string;
+    postCode: string;
+    country: string;
+  };
+  clientAddress: {
+    street: string;
+    city: string;
+    postCode: string;
+    country: string;
+  };
+  items: Array<{
+    name: string;
+    quantity: number;
+    price: number;
+  }>;
+};
+
+let tempDir: string | undefined;
+let storeFile: string | undefined;
+let app: Express;
 
 beforeAll(async () => {
   tempDir = await mkdtemp(path.join(os.tmpdir(), "invoice-app-tests-"));
@@ -113,7 +140,8 @@ beforeAll(async () => {
   await writeFile(storeFile, JSON.stringify(seedInvoices, null, 2), "utf-8");
   process.env.INVOICE_STORE_FILE = storeFile;
 
-  ({ app } = await import("../server/app"));
+  const appModule = await import("../server/app");
+  app = appModule.app;
 });
 
 afterAll(async () => {
@@ -125,15 +153,18 @@ afterAll(async () => {
 
 describe("invoice API", () => {
   it("returns the seeded invoices and supports status filtering", async () => {
-    const response = await request(app).get("/api/invoices?status=paid");
+    const client = request.agent(app) as unknown as {
+      get: (url: string) => Promise<{ status: number; body: Array<{ status: string }> }>;
+    };
+    const response = await client.get("/api/invoices?status=paid");
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveLength(1);
     expect(response.body[0].status).toBe("paid");
   });
 
-  it("creates a draft invoice, marks it as paid, and deletes it", async () => {
-    const payload = {
+  it("creates a pending invoice, marks it as paid, and deletes it", async () => {
+    const payload: TestInvoicePayload = {
       createdAt: "2026-04-20",
       paymentDue: "2026-05-20",
       description: "Homepage content refresh",
@@ -155,19 +186,24 @@ describe("invoice API", () => {
       items: [{ name: "Copywriting", quantity: 1, price: 750 }]
     };
 
-    const createResponse = await request(app).post("/api/invoices?draft=true").send(payload);
+    const client = request.agent(app) as unknown as {
+      post: (url: string) => { send: (body: unknown) => Promise<{ status: number; body: { id: string; status: string } }> };
+      patch: (url: string) => Promise<{ status: number; body: { status: string } }>;
+      delete: (url: string) => Promise<{ status: number }>;
+    };
+    const createResponse = await client.post("/api/invoices").send(payload);
 
     expect(createResponse.status).toBe(201);
-    expect(createResponse.body.status).toBe("draft");
+    expect(createResponse.body.status).toBe("pending");
 
-    const markPaidResponse = await request(app).patch(`/api/invoices/${createResponse.body.id}/mark-paid`);
+    const markPaidResponse = await client.patch(`/api/invoices/${createResponse.body.id}/mark-paid`);
     expect(markPaidResponse.status).toBe(200);
     expect(markPaidResponse.body.status).toBe("paid");
 
-    const deleteResponse = await request(app).delete(`/api/invoices/${createResponse.body.id}`);
+    const deleteResponse = await client.delete(`/api/invoices/${createResponse.body.id}`);
     expect(deleteResponse.status).toBe(204);
 
-    const stored = JSON.parse(await readFile(storeFile, "utf-8"));
+    const stored = JSON.parse(await readFile(String(storeFile), "utf-8")) as Array<{ id: string }>;
     expect(stored.find((invoice) => invoice.id === createResponse.body.id)).toBeUndefined();
   });
 });
