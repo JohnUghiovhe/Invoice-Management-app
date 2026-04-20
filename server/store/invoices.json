@@ -1,44 +1,5 @@
 [
   {
-    "id": "RT3080",
-    "createdAt": "2026-04-01",
-    "paymentDue": "2026-04-30",
-    "description": "Website redesign",
-    "paymentTerms": 30,
-    "clientName": "Karla Santos",
-    "clientEmail": "karla@northpeakstudio.com",
-    "status": "pending",
-    "senderAddress": {
-      "street": "42 Marina Quays",
-      "city": "Lagos",
-      "postCode": "100001",
-      "country": "Nigeria"
-    },
-    "clientAddress": {
-      "street": "11 Bridgeview Street",
-      "city": "Victoria Island",
-      "postCode": "106104",
-      "country": "Nigeria"
-    },
-    "items": [
-      {
-        "id": "item-1",
-        "name": "UI direction and wireframes",
-        "quantity": 1,
-        "price": 1200,
-        "total": 1200
-      },
-      {
-        "id": "item-2",
-        "name": "Responsive implementation",
-        "quantity": 1,
-        "price": 1800,
-        "total": 1800
-      }
-    ],
-    "total": 3000
-  },
-  {
     "id": "XM9141",
     "createdAt": "2026-04-03",
     "paymentDue": "2026-04-18",
@@ -147,5 +108,37 @@
       }
     ],
     "total": 2000
+  },
+  {
+    "id": "R0_D-T",
+    "createdAt": "2026-04-20",
+    "paymentDue": "2026-04-20",
+    "description": "UI/UX Design",
+    "paymentTerms": 30,
+    "clientName": "Tech Innovations Ltd",
+    "clientEmail": "contact@techinnovations.com",
+    "status": "paid",
+    "senderAddress": {
+      "street": "123 Design Avenue",
+      "city": "Lagos",
+      "postCode": "100001",
+      "country": "Nigeria"
+    },
+    "clientAddress": {
+      "street": "456 Tech Hub",
+      "city": "Abuja",
+      "postCode": "900211",
+      "country": "Nigeria"
+    },
+    "items": [
+      {
+        "id": "RPHM7pCY",
+        "name": "Design Services",
+        "quantity": 1,
+        "price": 1500,
+        "total": 1500
+      }
+    ],
+    "total": 1500
   }
 ]
