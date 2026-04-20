@@ -37,7 +37,7 @@ export function InvoiceItemRow({ index, item, errors, onChange, onRemove }) {
           <button
             type="button"
             onClick={() => onRemove(index)}
-            className="w-full rounded-lg border border-red-300 px-3 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50 dark:border-red-600 dark:text-red-300 dark:hover:bg-red-900/25"
+            className="w-full rounded-full bg-danger-500 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-danger-400"
           >
             Remove
           </button>

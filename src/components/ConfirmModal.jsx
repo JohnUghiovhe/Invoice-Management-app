@@ -85,7 +85,7 @@ export function ConfirmModal({ isOpen, title, message, onConfirm, onClose, busy 
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-ink-300 px-4 py-2 text-sm font-semibold text-ink-700 transition hover:bg-ink-100 dark:border-ink-600 dark:text-ink-200 dark:hover:bg-ink-700"
+            className="rounded-full bg-ink-100 px-6 py-3 text-sm font-bold text-ink-500 transition hover:bg-ink-200 dark:bg-ink-600 dark:text-ink-200 dark:hover:bg-white dark:hover:text-ink-500"
           >
             Cancel
           </button>
@@ -93,7 +93,7 @@ export function ConfirmModal({ isOpen, title, message, onConfirm, onClose, busy 
             type="button"
             disabled={busy}
             onClick={onConfirm}
-            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70"
+            className="rounded-full bg-danger-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-danger-400 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {busy ? "Deleting..." : "Delete"}
           </button>

@@ -181,13 +181,6 @@ export function InvoiceForm({ initialData, mode, onSubmit, isSaving }) {
           <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-ink-500 dark:text-ink-300">
             Invoice Items
           </h2>
-          <button
-            type="button"
-            onClick={addItem}
-            className="rounded-full border border-brand-500 px-4 py-2 text-sm font-semibold text-brand-700 transition hover:bg-brand-100 dark:border-brand-400 dark:text-brand-300 dark:hover:bg-brand-900/35"
-          >
-            Add New Item
-          </button>
         </div>
 
         <div className="space-y-3">
@@ -202,6 +195,13 @@ export function InvoiceForm({ initialData, mode, onSubmit, isSaving }) {
             />
           ))}
         </div>
+        <button
+          type="button"
+          onClick={addItem}
+          className="mt-4 w-full rounded-full bg-ink-100 px-4 py-3 text-sm font-bold text-brand-500 transition hover:bg-ink-200 dark:bg-ink-600 dark:text-ink-200 dark:hover:bg-ink-500"
+        >
+          + Add New Item
+        </button>
         <FieldError message={errors.items} />
       </section>
 
@@ -212,7 +212,7 @@ export function InvoiceForm({ initialData, mode, onSubmit, isSaving }) {
           onClick={() => {
             void submitWithState(true);
           }}
-          className="rounded-lg border border-ink-300 px-4 py-2 text-sm font-semibold text-ink-700 transition hover:bg-ink-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-ink-600 dark:text-ink-200 dark:hover:bg-ink-700"
+          className="rounded-full bg-ink-600 px-6 py-3 text-sm font-bold text-ink-100 transition hover:bg-ink-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-ink-800 dark:text-ink-200 dark:hover:bg-ink-900"
         >
           Save as Draft
         </button>
@@ -220,7 +220,7 @@ export function InvoiceForm({ initialData, mode, onSubmit, isSaving }) {
         <button
           type="submit"
           disabled={isSaving}
-          className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-full bg-brand-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSaving ? "Saving..." : mode === "create" ? "Save & Send" : "Save Changes"}
         </button>

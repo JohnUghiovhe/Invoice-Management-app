@@ -1,6 +1,12 @@
 import { InputField } from "./InputField";
 
 const addressFields = ["street", "city", "postCode", "country"];
+const addressLabels = {
+  street: "Street Address",
+  city: "City",
+  postCode: "Post Code",
+  country: "Country"
+};
 
 export function AddressSection({ title, prefix, values, errors, onChange }) {
   return (
@@ -14,7 +20,7 @@ export function AddressSection({ title, prefix, values, errors, onChange }) {
             <InputField
               key={id}
               id={id}
-              label={field}
+              label={addressLabels[field]}
               value={values[field]}
               onChange={(event) => onChange(field, event.target.value)}
               error={errors[id]}

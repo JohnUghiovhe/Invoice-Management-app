@@ -78,7 +78,7 @@ export function InvoiceFormPage() {
       </div>
 
       {error ? (
-        <p className="mb-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-200">
+        <p className="mb-4 rounded-lg border border-danger-300 bg-danger-100 p-3 text-sm text-danger-700 dark:border-danger-600 dark:bg-danger-500/20 dark:text-danger-300">
           {error}
         </p>
       ) : null}

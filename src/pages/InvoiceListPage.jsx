@@ -58,8 +58,11 @@ export function InvoiceListPage() {
             <ThemeToggle />
             <Link
               to="/invoice/new"
-              className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-ink-900 shadow transition hover:-translate-y-0.5 hover:bg-brand-50"
+              className="inline-flex items-center gap-3 rounded-full bg-brand-500 pl-2 pr-5 py-2 text-sm font-bold text-white shadow transition hover:bg-brand-400"
             >
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-base font-bold leading-none text-brand-500">
+                +
+              </span>
               New Invoice
             </Link>
           </div>
@@ -73,7 +76,7 @@ export function InvoiceListPage() {
           {loading ? <p className="text-sm text-ink-600 dark:text-ink-300">Loading...</p> : null}
 
           {error ? (
-            <div className="rounded-xl border border-red-300 bg-red-50 p-4 text-sm font-medium text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-200">
+            <div className="rounded-xl border border-danger-300 bg-danger-100 p-4 text-sm font-medium text-danger-700 dark:border-danger-600 dark:bg-danger-500/20 dark:text-danger-300">
               {error}
             </div>
           ) : null}

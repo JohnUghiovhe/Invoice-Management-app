@@ -69,7 +69,7 @@ export function InvoiceDetailPage() {
         <Link to="/" className="text-sm font-semibold text-brand-700 hover:underline dark:text-brand-300">
           Back to invoices
         </Link>
-        <p className="mt-4 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-200">
+        <p className="mt-4 rounded-xl border border-danger-300 bg-danger-100 p-4 text-sm text-danger-700 dark:border-danger-600 dark:bg-danger-500/20 dark:text-danger-300">
           {error || "Invoice not found"}
         </p>
       </main>
@@ -132,7 +132,7 @@ export function InvoiceDetailPage() {
         <div className="mt-6 flex flex-wrap justify-end gap-3 border-t border-ink-100 pt-6 dark:border-ink-700">
           <Link
             to={`/invoice/${invoice.id}/edit`}
-            className="rounded-lg border border-ink-300 px-4 py-2 text-sm font-semibold text-ink-700 transition hover:bg-ink-100 dark:border-ink-600 dark:text-ink-200 dark:hover:bg-ink-700"
+            className="rounded-full bg-ink-100 px-6 py-3 text-sm font-bold text-ink-500 transition hover:bg-ink-200 dark:bg-ink-600 dark:text-ink-200 dark:hover:bg-white dark:hover:text-ink-500"
           >
             Edit
           </Link>
@@ -140,7 +140,7 @@ export function InvoiceDetailPage() {
           <button
             type="button"
             onClick={() => setDeleteOpen(true)}
-            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+            className="rounded-full bg-danger-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-danger-400"
           >
             Delete
           </button>
@@ -149,7 +149,7 @@ export function InvoiceDetailPage() {
             type="button"
             onClick={handleMarkPaid}
             disabled={busy || invoice.status !== "pending"}
-            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-full bg-brand-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {busy && invoice.status === "pending" ? "Updating..." : "Mark as Paid"}
           </button>
