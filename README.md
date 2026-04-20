@@ -101,31 +101,31 @@ It uses React + Tailwind on the client and Express + TypeScript on the server.
 │  ├─ validation/invoiceSchema.ts
 │  └─ types.ts
 ├─ src/
-│  ├─ App.jsx
-│  ├─ main.jsx
+│  ├─ App.tsx
+│  ├─ main.tsx
 │  ├─ index.css
 │  ├─ pages/
-│  │  ├─ InvoiceListPage.jsx
-│  │  ├─ InvoiceDetailPage.jsx
-│  │  └─ InvoiceFormPage.jsx
+│  │  ├─ InvoiceListPage.tsx
+│  │  ├─ InvoiceDetailPage.tsx
+│  │  └─ InvoiceFormPage.tsx
 │  ├─ components/
-│  │  ├─ ConfirmModal.jsx
-│  │  ├─ InvoiceCard.jsx
-│  │  ├─ InvoiceForm.jsx
-│  │  ├─ StatusBadge.jsx
-│  │  ├─ ThemeToggle.jsx
+│  │  ├─ ConfirmModal.tsx
+│  │  ├─ InvoiceCard.tsx
+│  │  ├─ InvoiceForm.tsx
+│  │  ├─ StatusBadge.tsx
+│  │  ├─ ThemeToggle.tsx
 │  │  └─ form/
-│  │     ├─ AddressSection.jsx
-│  │     ├─ FieldError.jsx
-│  │     ├─ InputField.jsx
-│  │     └─ InvoiceItemRow.jsx
-│  ├─ context/ThemeContext.jsx
-│  ├─ hooks/useEscClose.js
+│  │     ├─ AddressSection.tsx
+│  │     ├─ FieldError.tsx
+│  │     ├─ InputField.tsx
+│  │     └─ InvoiceItemRow.tsx
+│  ├─ context/ThemeContext.tsx
+│  ├─ hooks/useEscClose.ts
 │  └─ lib/
-│     ├─ api.js
-│     ├─ format.js
-│     ├─ types.js
-│     └─ validation.js
+│     ├─ api.ts
+│     ├─ format.ts
+│     ├─ types.ts
+│     └─ validation.ts
 ├─ tests/
 │  ├─ api.test.ts
 │  └─ validation.test.ts

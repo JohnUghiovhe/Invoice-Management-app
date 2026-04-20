@@ -1,15 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { InvoiceForm } from "../components/InvoiceForm";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { createInvoice, getInvoice, updateInvoice } from "../lib/api";
-import { emptyInvoice } from "../lib/types";
+import { emptyInvoice, type Invoice, type InvoiceFormValues, type UpsertInvoicePayload } from "../lib/types";
 
 export function InvoiceFormPage() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isEditing = Boolean(id);
-  const [initialData, setInitialData] = useState(emptyInvoice);
+  const [initialData, setInitialData] = useState<InvoiceFormValues>(emptyInvoice);
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -38,26 +38,30 @@ export function InvoiceFormPage() {
           }))
         });
       })
-      .catch((err) => setError(err.message || "Unable to load invoice"))
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : "Unable to load invoice"))
       .finally(() => setLoading(false));
   }, [id, isEditing]);
 
-  const title = useMemo(() => (isEditing ? "Edit Invoice" : "Create Invoice"), [isEditing]);
+  const title = isEditing ? "Edit Invoice" : "Create Invoice";
 
-  const handleSubmit = async (payload, asDraft) => {
+  const handleSubmit = async (payload: UpsertInvoicePayload, asDraft: boolean) => {
     setSaving(true);
     setError("");
 
     try {
       if (isEditing && id) {
-        const invoice = await updateInvoice(id, payload, asDraft);
-        navigate(`/invoice/${invoice.id}`);
+        const invoice = (await updateInvoice(id, payload, asDraft)) as Invoice;
+        if (invoice) {
+          navigate(`/invoice/${invoice.id}`);
+        }
       } else {
-        const invoice = await createInvoice(payload, asDraft);
-        navigate(`/invoice/${invoice.id}`);
+        const invoice = (await createInvoice(payload, asDraft)) as Invoice;
+        if (invoice) {
+          navigate(`/invoice/${invoice.id}`);
+        }
       }
-    } catch (err) {
-      setError(err.message || "Unable to save invoice");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Unable to save invoice");
     } finally {
       setSaving(false);
     }

@@ -1,12 +1,12 @@
 import { useEffect } from "react";
 
-export function useEscClose(isOpen, onClose) {
+export function useEscClose(isOpen: boolean, onClose: () => void) {
   useEffect(() => {
     if (!isOpen) {
       return undefined;
     }
 
-    const handleEsc = (event) => {
+    const handleEsc = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onClose();
       }

@@ -1,4 +1,8 @@
-export function FieldError({ message }) {
+type FieldErrorProps = {
+  message?: string;
+};
+
+export function FieldError({ message }: FieldErrorProps) {
   if (!message) {
     return null;
   }

@@ -1,24 +1,24 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type FocusEvent, type MouseEvent, type ChangeEvent } from "react";
 import { Link } from "react-router-dom";
 import { InvoiceCard } from "../components/InvoiceCard";
 import { useTheme } from "../context/ThemeContext";
 import { listInvoices } from "../lib/api";
-import { INVOICE_STATUSES } from "../lib/types";
+import { INVOICE_STATUSES, type Invoice, type InvoiceStatus } from "../lib/types";
 
 export function InvoiceListPage() {
   const { theme, toggleTheme } = useTheme();
   const defaultProfileImage =
     "https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=160&w=160";
-  const [selectedStatuses, setSelectedStatuses] = useState(INVOICE_STATUSES);
-  const [invoices, setInvoices] = useState([]);
+  const [selectedStatuses, setSelectedStatuses] = useState<InvoiceStatus[]>([...INVOICE_STATUSES]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [profileImage, setProfileImage] = useState(defaultProfileImage);
   const [uploadedProfileUrl, setUploadedProfileUrl] = useState("");
-  const dropdownRef = useRef(null);
-  const dropdownButtonRef = useRef(null);
-  const profileInputRef = useRef(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const dropdownButtonRef = useRef<HTMLButtonElement | null>(null);
+  const profileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!selectedStatuses.length) {
@@ -31,8 +31,8 @@ export function InvoiceListPage() {
     setError("");
 
     listInvoices(selectedStatuses)
-      .then(setInvoices)
-      .catch((err) => setError(err.message || "Unable to load invoices"))
+      .then((result) => setInvoices(result || []))
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : "Unable to load invoices"))
       .finally(() => setLoading(false));
   }, [selectedStatuses]);
 
@@ -41,8 +41,8 @@ export function InvoiceListPage() {
       return;
     }
 
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    const handleClickOutside = (event: globalThis.MouseEvent) => {
+      if (dropdownRef.current && event.target instanceof Node && !dropdownRef.current.contains(event.target)) {
         setDropdownOpen(false);
       }
     };
@@ -56,7 +56,7 @@ export function InvoiceListPage() {
       return undefined;
     }
 
-    const handleEscape = (event) => {
+    const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setDropdownOpen(false);
         dropdownButtonRef.current?.focus();
@@ -82,7 +82,7 @@ export function InvoiceListPage() {
     return `${invoices.length} invoice${invoices.length === 1 ? "" : "s"}`;
   }, [invoices.length, loading]);
 
-  const handleToggleStatus = (status) => {
+  const handleToggleStatus = (status: InvoiceStatus) => {
     setSelectedStatuses((current) => {
       if (current.includes(status)) {
         return current.filter((item) => item !== status);
@@ -91,7 +91,7 @@ export function InvoiceListPage() {
     });
   };
 
-  const handleProfileUpload = (event) => {
+  const handleProfileUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) {
       return;
@@ -200,8 +200,9 @@ export function InvoiceListPage() {
             <div
               className="relative"
               ref={dropdownRef}
-              onBlurCapture={(event) => {
-                if (!event.currentTarget.contains(event.relatedTarget)) {
+              onBlurCapture={(event: FocusEvent<HTMLDivElement>) => {
+                const nextTarget = event.relatedTarget;
+                if (!nextTarget || !event.currentTarget.contains(nextTarget)) {
                   setDropdownOpen(false);
                 }
               }}
@@ -273,25 +274,16 @@ export function InvoiceListPage() {
             <div className="rounded-[28px] border border-dashed border-ink-300 bg-white/70 p-10 text-center dark:border-ink-600 dark:bg-ink-800/70">
               <div className="mb-6 flex justify-center">
                 <svg width="240" height="200" viewBox="0 0 240 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-brand-500">
-                  {/* Envelope */}
                   <rect x="30" y="80" width="160" height="100" rx="8" fill="none" stroke="currentColor" strokeWidth="2"/>
                   <path d="M 30 80 L 110 130 L 190 80" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  
-                  {/* Person body */}
                   <ellipse cx="110" cy="70" rx="16" fill="currentColor"/>
                   <rect x="98" y="88" width="24" height="35" rx="4" fill="currentColor"/>
-                  
-                  {/* Person jacket */}
                   <path d="M 98 88 L 85 105 L 85 120 Q 85 125 90 125 L 130 125 Q 135 125 135 120 L 135 105 L 122 88" fill="currentColor" opacity="0.8"/>
-                  
-                  {/* Megaphone */}
                   <g transform="translate(145, 60)">
                     <circle cx="0" cy="0" r="8" fill="currentColor"/>
                     <path d="M 8 -8 L 20 -15 L 20 15 L 8 8 Q 5 0 8 0" fill="currentColor" opacity="0.8"/>
                     <path d="M -2 -3 L -8 0 L -2 3" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
                   </g>
-
-                  {/* Decorative elements */}
                   <circle cx="35" cy="35" r="4" fill="currentColor" opacity="0.6"/>
                   <rect x="45" y="25" width="8" height="12" rx="2" fill="currentColor" opacity="0.6" transform="rotate(-25 49 31)"/>
                   <path d="M 190 40 L 195 30 L 200 35" stroke="currentColor" strokeWidth="2" fill="none" opacity="0.6" strokeLinecap="round"/>

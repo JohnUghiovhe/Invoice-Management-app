@@ -1,16 +1,25 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type MouseEvent as ReactMouseEvent } from "react";
 import { useEscClose } from "../hooks/useEscClose";
 
-function getTabbableElements(container) {
+function getTabbableElements(container: HTMLElement) {
   return Array.from(
-    container.querySelectorAll(
+    container.querySelectorAll<HTMLElement>(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     )
   ).filter((element) => !element.hasAttribute("disabled"));
 }
 
-export function ConfirmModal({ isOpen, title, message, onConfirm, onClose, busy = false }) {
-  const dialogRef = useRef(null);
+type ConfirmModalProps = {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  onClose: () => void;
+  busy?: boolean;
+};
+
+export function ConfirmModal({ isOpen, title, message, onConfirm, onClose, busy = false }: ConfirmModalProps) {
+  const dialogRef = useRef<HTMLDivElement | null>(null);
 
   useEscClose(isOpen, onClose);
 
@@ -23,7 +32,7 @@ export function ConfirmModal({ isOpen, title, message, onConfirm, onClose, busy 
     const tabbables = getTabbableElements(dialog);
     tabbables[0]?.focus();
 
-    const handleTab = (event) => {
+    const handleTab = (event: KeyboardEvent) => {
       if (event.key !== "Tab") {
         return;
       }
@@ -63,7 +72,7 @@ export function ConfirmModal({ isOpen, title, message, onConfirm, onClose, busy 
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/55 p-4"
       role="presentation"
-      onMouseDown={(event) => {
+      onMouseDown={(event: ReactMouseEvent<HTMLDivElement>) => {
         if (event.target === event.currentTarget) {
           onClose();
         }

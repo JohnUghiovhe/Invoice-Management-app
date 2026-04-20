@@ -1,14 +1,23 @@
 import { InputField } from "./InputField";
+import { type Address, type InvoiceErrors } from "../../lib/types";
 
-const addressFields = ["street", "city", "postCode", "country"];
-const addressLabels = {
+const addressFields = ["street", "city", "postCode", "country"] as const;
+const addressLabels: Record<(typeof addressFields)[number], string> = {
   street: "Street Address",
   city: "City",
   postCode: "Post Code",
   country: "Country"
 };
 
-export function AddressSection({ title, prefix, values, errors, onChange }) {
+type AddressSectionProps = {
+  title: string;
+  prefix: string;
+  values: Address;
+  errors: InvoiceErrors;
+  onChange: (field: (typeof addressFields)[number], value: string) => void;
+};
+
+export function AddressSection({ title, prefix, values, errors, onChange }: AddressSectionProps) {
   return (
     <div>
       <h2 className="mb-2 text-sm font-extrabold uppercase tracking-[0.18em] text-ink-900 dark:text-ink-100">{title}</h2>

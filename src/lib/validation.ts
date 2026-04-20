@@ -1,7 +1,9 @@
+import { type InvoiceErrors, type UpsertInvoicePayload } from "./types";
+
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function validateInvoice(payload) {
-  const errors = {};
+export function validateInvoice(payload: UpsertInvoicePayload): InvoiceErrors {
+  const errors: InvoiceErrors = {};
 
   if (!payload.clientName.trim()) {
     errors.clientName = "Client name is required";
@@ -33,7 +35,7 @@ export function validateInvoice(payload) {
     });
   }
 
-  ["street", "city", "postCode", "country"].forEach((field) => {
+  (["street", "city", "postCode", "country"] as const).forEach((field) => {
     if (!payload.senderAddress[field]?.trim()) {
       errors[`sender-${field}`] = "Required";
     }

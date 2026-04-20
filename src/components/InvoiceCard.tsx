@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { StatusBadge } from "./StatusBadge";
+import { type Invoice } from "../lib/types";
 
-export function InvoiceCard({ invoice }) {
+export function InvoiceCard({ invoice }: { invoice: Invoice }) {
   return (
     <Link
       to={`/invoice/${invoice.id}`}

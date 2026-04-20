@@ -1,6 +1,15 @@
 import { InputField } from "./InputField";
+import { type InvoiceErrors, type InvoiceFormItem } from "../../lib/types";
 
-export function InvoiceItemRow({ index, item, errors, onChange, onRemove }) {
+type InvoiceItemRowProps = {
+  index: number;
+  item: InvoiceFormItem;
+  errors: InvoiceErrors;
+  onChange: (index: number, field: "name" | "quantity" | "price", value: string) => void;
+  onRemove: (index: number) => void;
+};
+
+export function InvoiceItemRow({ index, item, errors, onChange, onRemove }: InvoiceItemRowProps) {
   return (
     <div className="rounded-2xl border border-ink-200 p-4 dark:border-ink-700">
       <div className="grid gap-3 md:grid-cols-[2fr_1fr_1fr_auto] md:items-end">

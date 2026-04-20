@@ -5,11 +5,12 @@ import { StatusBadge } from "../components/StatusBadge";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { getInvoice, markAsPaid, removeInvoice } from "../lib/api";
 import { formatCurrency } from "../lib/format";
+import { type Invoice } from "../lib/types";
 
 export function InvoiceDetailPage() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [invoice, setInvoice] = useState(null);
+  const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -24,8 +25,8 @@ export function InvoiceDetailPage() {
     setError("");
 
     getInvoice(id)
-      .then(setInvoice)
-      .catch((err) => setError(err.message || "Unable to load invoice"))
+      .then((result) => setInvoice(result))
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : "Unable to load invoice"))
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -37,9 +38,11 @@ export function InvoiceDetailPage() {
     setBusy(true);
     try {
       const updated = await markAsPaid(invoice.id);
-      setInvoice(updated);
-    } catch (err) {
-      setError(err.message || "Unable to mark invoice as paid");
+      if (updated) {
+        setInvoice(updated);
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Unable to mark invoice as paid");
     } finally {
       setBusy(false);
     }
@@ -54,8 +57,8 @@ export function InvoiceDetailPage() {
     try {
       await removeInvoice(invoice.id);
       navigate("/");
-    } catch (err) {
-      setError(err.message || "Unable to delete invoice");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Unable to delete invoice");
       setBusy(false);
     }
   };

@@ -4,8 +4,9 @@ import { AddressSection } from "./form/AddressSection";
 import { FieldError } from "./form/FieldError";
 import { InputField } from "./form/InputField";
 import { InvoiceItemRow } from "./form/InvoiceItemRow";
+import { type InvoiceErrors, type InvoiceFormValues, type UpsertInvoicePayload } from "../lib/types";
 
-function normalizeInvoice(values) {
+function normalizeInvoice(values: InvoiceFormValues): UpsertInvoicePayload {
   return {
     ...values,
     paymentTerms: Number(values.paymentTerms),
@@ -17,19 +18,26 @@ function normalizeInvoice(values) {
   };
 }
 
-export function InvoiceForm({ initialData, mode, onSubmit, isSaving }) {
-  const [formValues, setFormValues] = useState(() => structuredClone(initialData));
-  const [errors, setErrors] = useState({});
+type InvoiceFormProps = {
+  initialData: InvoiceFormValues;
+  mode: "create" | "edit";
+  onSubmit: (payload: UpsertInvoicePayload, asDraft: boolean) => Promise<void>;
+  isSaving: boolean;
+};
+
+export function InvoiceForm({ initialData, mode, onSubmit, isSaving }: InvoiceFormProps) {
+  const [formValues, setFormValues] = useState<InvoiceFormValues>(() => structuredClone(initialData));
+  const [errors, setErrors] = useState<InvoiceErrors>({});
 
   const totalAmount = useMemo(() => {
     return formValues.items.reduce((sum, item) => sum + Number(item.quantity || 0) * Number(item.price || 0), 0);
   }, [formValues.items]);
 
-  const handleField = (name, value) => {
+  const handleField = (name: keyof InvoiceFormValues, value: string | number) => {
     setFormValues((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleAddressField = (group, field, value) => {
+  const handleAddressField = (group: "senderAddress" | "clientAddress", field: keyof InvoiceFormValues["senderAddress"], value: string) => {
     setFormValues((prev) => ({
       ...prev,
       [group]: {
@@ -39,7 +47,7 @@ export function InvoiceForm({ initialData, mode, onSubmit, isSaving }) {
     }));
   };
 
-  const handleItemField = (index, field, value) => {
+  const handleItemField = (index: number, field: "name" | "quantity" | "price", value: string) => {
     setFormValues((prev) => {
       const items = prev.items.map((item, itemIndex) => {
         if (itemIndex !== index) {
@@ -66,14 +74,14 @@ export function InvoiceForm({ initialData, mode, onSubmit, isSaving }) {
     }));
   };
 
-  const removeItem = (index) => {
+  const removeItem = (index: number) => {
     setFormValues((prev) => ({
       ...prev,
       items: prev.items.filter((_item, itemIndex) => itemIndex !== index)
     }));
   };
 
-  const submitWithState = async (asDraft) => {
+  const submitWithState = async (asDraft: boolean) => {
     const payload = normalizeInvoice(formValues);
 
     if (!asDraft) {
@@ -178,9 +186,7 @@ export function InvoiceForm({ initialData, mode, onSubmit, isSaving }) {
 
       <section>
         <div className="mb-3 flex items-center justify-between gap-4">
-          <h2 className="text-sm font-extrabold uppercase tracking-[0.18em] text-ink-900 dark:text-ink-100">
-            Item List
-          </h2>
+          <h2 className="text-sm font-extrabold uppercase tracking-[0.18em] text-ink-900 dark:text-ink-100">Item List</h2>
         </div>
 
         <div className="space-y-3">
