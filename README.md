@@ -43,7 +43,7 @@ This project covers the full invoice lifecycle:
 - Filter by status (draft, pending, paid)
 - Persist theme preference across reloads
 
-It uses React + Tailwind on the client and Express + TypeScript on the server.
+It uses React + TypeScript + Tailwind on the client and Express + TypeScript on the server.
 
 ## Feature Set
 
@@ -70,6 +70,7 @@ It uses React + Tailwind on the client and Express + TypeScript on the server.
 ### Frontend
 
 - React 18
+- TypeScript
 - React Router DOM 6
 - Tailwind CSS 3
 - Vite 7
@@ -132,7 +133,8 @@ It uses React + Tailwind on the client and Express + TypeScript on the server.
 ├─ vite.config.ts
 ├─ vitest.config.mts
 ├─ tailwind.config.cjs
-└─ tsconfig.json
+├─ tsconfig.json
+└─ tsconfig.server.json
 ```
 
 ## Architecture
@@ -141,7 +143,7 @@ It uses React + Tailwind on the client and Express + TypeScript on the server.
 
 ```text
 React UI
-  -> api.js fetch client
+  -> api.ts fetch client
   -> Express routes (/api/*)
   -> validation (Zod + query parser)
   -> store/business logic
@@ -318,7 +320,7 @@ Validation runs at two layers.
 
 ### Client-side
 
-- Implemented in src/lib/validation.js
+- Implemented in src/lib/validation.ts
 - Immediate feedback before submit
 - Checks required fields, email format, item count, quantity/price constraints, and address completeness
 
