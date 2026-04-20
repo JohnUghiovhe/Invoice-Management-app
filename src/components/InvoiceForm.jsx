@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { validateInvoice } from "../lib/validation";
 
 const baseInputClass =
-  "mt-1 w-full rounded-lg border bg-white px-3 py-2 text-sm text-ink-900 outline-none transition focus:ring-2 dark:bg-ink-900 dark:text-ink-100";
+  "mt-1 w-full rounded-2xl border bg-white px-4 py-2.5 text-sm text-ink-900 outline-none transition focus:ring-2 dark:bg-ink-900 dark:text-ink-100";
 
 function FieldError({ message }) {
   if (!message) {
@@ -104,14 +104,14 @@ export function InvoiceForm({ initialData, mode, onSubmit, isSaving }) {
 
   return (
     <form
-      className="space-y-8 rounded-3xl border border-ink-200 bg-white p-6 shadow-lg dark:border-ink-700 dark:bg-ink-800"
+      className="space-y-7 rounded-[32px] border border-ink-200 bg-white p-5 shadow-lg dark:border-ink-700 dark:bg-ink-800 sm:p-6 lg:p-8"
       onSubmit={(event) => {
         event.preventDefault();
         void submitWithState(false);
       }}
       noValidate
     >
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-ink-100 pb-5 dark:border-ink-700">
         <h1 className="text-2xl font-bold text-ink-900 dark:text-ink-100">
           {mode === "create" ? "New Invoice" : "Edit Invoice"}
         </h1>
@@ -204,7 +204,7 @@ export function InvoiceForm({ initialData, mode, onSubmit, isSaving }) {
 
       <section className="grid gap-6 md:grid-cols-2">
         <div>
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-[0.14em] text-ink-500 dark:text-ink-300">
+          <h2 className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-ink-500 dark:text-ink-300">
             Sender Address
           </h2>
           <div className="grid gap-3">
@@ -226,7 +226,7 @@ export function InvoiceForm({ initialData, mode, onSubmit, isSaving }) {
         </div>
 
         <div>
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-[0.14em] text-ink-500 dark:text-ink-300">
+          <h2 className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-ink-500 dark:text-ink-300">
             Client Address
           </h2>
           <div className="grid gap-3">
@@ -250,13 +250,13 @@ export function InvoiceForm({ initialData, mode, onSubmit, isSaving }) {
 
       <section>
         <div className="mb-3 flex items-center justify-between gap-4">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-ink-500 dark:text-ink-300">
+          <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-ink-500 dark:text-ink-300">
             Invoice Items
           </h2>
           <button
             type="button"
             onClick={addItem}
-            className="rounded-lg border border-brand-500 px-3 py-1.5 text-sm font-semibold text-brand-700 transition hover:bg-brand-100 dark:border-brand-400 dark:text-brand-300 dark:hover:bg-brand-900/35"
+            className="rounded-full border border-brand-500 px-4 py-2 text-sm font-semibold text-brand-700 transition hover:bg-brand-100 dark:border-brand-400 dark:text-brand-300 dark:hover:bg-brand-900/35"
           >
             Add New Item
           </button>
@@ -264,8 +264,8 @@ export function InvoiceForm({ initialData, mode, onSubmit, isSaving }) {
 
         <div className="space-y-3">
           {formValues.items.map((item, index) => (
-            <div key={`item-${index}`} className="rounded-xl border border-ink-200 p-4 dark:border-ink-700">
-              <div className="grid gap-3 md:grid-cols-[2fr_1fr_1fr_auto]">
+            <div key={`item-${index}`} className="rounded-2xl border border-ink-200 p-4 dark:border-ink-700">
+              <div className="grid gap-3 md:grid-cols-[2fr_1fr_1fr_auto] md:items-end">
                 <div>
                   <label htmlFor={`item-name-${index}`} className="text-sm font-medium text-ink-700 dark:text-ink-200">
                     Name
@@ -326,7 +326,7 @@ export function InvoiceForm({ initialData, mode, onSubmit, isSaving }) {
         <FieldError message={errors.items} />
       </section>
 
-      <div className="flex flex-wrap justify-end gap-3">
+      <div className="flex flex-wrap justify-end gap-3 border-t border-ink-100 pt-5 dark:border-ink-700">
         <button
           type="button"
           disabled={isSaving}
