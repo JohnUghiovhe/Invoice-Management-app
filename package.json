@@ -10,6 +10,8 @@
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build",
     "build:server": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "start": "node dist/server.js"
   },
   "keywords": [],
@@ -35,9 +37,11 @@
     "autoprefixer": "^10.4.21",
     "concurrently": "^9.2.1",
     "postcss": "^8.5.6",
+    "supertest": "^7.1.4",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2",
+    "vitest": "^2.1.9",
     "vite": "^7.1.9"
   }
 }
