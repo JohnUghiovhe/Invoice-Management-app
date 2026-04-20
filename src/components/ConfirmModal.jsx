@@ -74,12 +74,15 @@ export function ConfirmModal({ isOpen, title, message, onConfirm, onClose, busy 
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirm-title"
+        aria-describedby="confirm-description"
         className="w-full max-w-md rounded-2xl border border-ink-200 bg-white p-6 shadow-xl dark:border-ink-700 dark:bg-ink-800"
       >
         <h2 id="confirm-title" className="text-xl font-bold text-ink-900 dark:text-ink-100">
           {title}
         </h2>
-        <p className="mt-2 text-sm leading-relaxed text-ink-600 dark:text-ink-300">{message}</p>
+        <p id="confirm-description" className="mt-2 text-sm leading-relaxed text-ink-700 dark:text-ink-200">
+          {message}
+        </p>
 
         <div className="mt-6 flex justify-end gap-3">
           <button

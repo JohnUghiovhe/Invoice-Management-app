@@ -76,14 +76,20 @@ app.put("/api/invoices/:id", async (req: Request, res: Response, next: NextFunct
 app.patch("/api/invoices/:id/mark-paid", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const invoiceId = String(req.params.id);
+    const current = await getInvoiceById(invoiceId);
+
+    if (!current) {
+      throw new AppError("Invoice not found", 404);
+    }
+
+    if (current.status !== "pending") {
+      throw new AppError("Only pending invoices can be marked as paid", 400);
+    }
+
     const invoice = await markInvoicePaid(invoiceId);
 
     if (!invoice) {
       throw new AppError("Invoice not found", 404);
-    }
-
-    if (invoice.status !== "paid") {
-      throw new AppError("Only pending invoices can be marked as paid", 400);
     }
 
     res.json(invoice);

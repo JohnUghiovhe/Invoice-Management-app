@@ -14,7 +14,7 @@ export function inputClass(error) {
 export function InputField({ id, label, error, className, ...props }) {
   return (
     <div className={className}>
-      <label htmlFor={id} className="text-xs font-medium tracking-wide text-ink-500 dark:text-ink-300">
+      <label htmlFor={id} className="text-xs font-semibold tracking-wide text-ink-700 dark:text-ink-200">
         {label}
       </label>
       <input id={id} className={inputClass(error)} {...props} />

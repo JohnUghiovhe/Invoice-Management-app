@@ -63,6 +63,7 @@ It uses React + Tailwind on the client and Express + TypeScript on the server.
 - Reusable form primitives to reduce duplication
 - Confirmation modal for destructive actions
 - Centralized backend error middleware
+- Desktop sidebar + responsive top bar navigation on tablet/mobile
 
 ## Tech Stack
 
@@ -109,7 +110,6 @@ It uses React + Tailwind on the client and Express + TypeScript on the server.
 │  │  └─ InvoiceFormPage.jsx
 │  ├─ components/
 │  │  ├─ ConfirmModal.jsx
-│  │  ├─ FilterPanel.jsx
 │  │  ├─ InvoiceCard.jsx
 │  │  ├─ InvoiceForm.jsx
 │  │  ├─ StatusBadge.jsx

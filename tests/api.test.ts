@@ -206,4 +206,18 @@ describe("invoice API", () => {
     const stored = JSON.parse(await readFile(String(storeFile), "utf-8")) as Array<{ id: string }>;
     expect(stored.find((invoice) => invoice.id === createResponse.body.id)).toBeUndefined();
   });
+
+  it("rejects mark-paid for non-pending invoices", async () => {
+    const client = request.agent(app) as unknown as {
+      patch: (url: string) => Promise<{ status: number; body: { message?: string } }>;
+    };
+
+    const draftResponse = await client.patch("/api/invoices/INV-002/mark-paid");
+    expect(draftResponse.status).toBe(400);
+    expect(draftResponse.body.message).toContain("Only pending invoices can be marked as paid");
+
+    const paidResponse = await client.patch("/api/invoices/INV-003/mark-paid");
+    expect(paidResponse.status).toBe(400);
+    expect(paidResponse.body.message).toContain("Only pending invoices can be marked as paid");
+  });
 });

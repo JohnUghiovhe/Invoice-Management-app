@@ -17,6 +17,7 @@ export function InvoiceListPage() {
   const [profileImage, setProfileImage] = useState(defaultProfileImage);
   const [uploadedProfileUrl, setUploadedProfileUrl] = useState("");
   const dropdownRef = useRef(null);
+  const dropdownButtonRef = useRef(null);
   const profileInputRef = useRef(null);
 
   useEffect(() => {
@@ -48,6 +49,22 @@ export function InvoiceListPage() {
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [dropdownOpen]);
+
+  useEffect(() => {
+    if (!dropdownOpen) {
+      return undefined;
+    }
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setDropdownOpen(false);
+        dropdownButtonRef.current?.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
   }, [dropdownOpen]);
 
   useEffect(() => {
@@ -180,11 +197,23 @@ export function InvoiceListPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <div className="relative" ref={dropdownRef}>
+            <div
+              className="relative"
+              ref={dropdownRef}
+              onBlurCapture={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget)) {
+                  setDropdownOpen(false);
+                }
+              }}
+            >
               <button
+                ref={dropdownButtonRef}
                 type="button"
                 onClick={() => setDropdownOpen((open) => !open)}
                 className="inline-flex items-center gap-2 text-sm font-bold text-ink-900 transition hover:text-brand-600 dark:text-ink-100 dark:hover:text-brand-300"
+                aria-expanded={dropdownOpen}
+                aria-controls="status-filter-menu"
+                aria-haspopup="true"
               >
                 Filter by status
                 <span className={`text-brand-500 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} aria-hidden="true">
@@ -193,7 +222,10 @@ export function InvoiceListPage() {
               </button>
 
               {dropdownOpen && (
-                <div className="absolute right-0 top-full z-10 mt-3 w-56 rounded-xl border border-ink-200 bg-white p-3 shadow-xl dark:border-ink-700 dark:bg-ink-700">
+                <div
+                  id="status-filter-menu"
+                  className="absolute right-0 top-full z-10 mt-3 w-56 rounded-xl border border-ink-200 bg-white p-3 shadow-xl dark:border-ink-700 dark:bg-ink-700"
+                >
                   <div className="space-y-2">
                     {INVOICE_STATUSES.map((status) => {
                       const isSelected = selectedStatuses.includes(status);
