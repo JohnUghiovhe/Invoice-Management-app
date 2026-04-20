@@ -1,1 +1,34 @@
-[]
+[
+  {
+    "id": "3EZDDC",
+    "createdAt": "2026-04-20",
+    "paymentDue": "2026-04-20",
+    "description": "Getting to know me",
+    "paymentTerms": 30,
+    "clientName": "John Andrew",
+    "clientEmail": "johnandrewjaw@gmail.com",
+    "status": "paid",
+    "senderAddress": {
+      "street": "Behind Old High Court",
+      "city": "Auchi",
+      "postCode": "312101",
+      "country": "Nigeria"
+    },
+    "clientAddress": {
+      "street": "26, Alhaji Lambo street, Alapere.",
+      "city": "Alapere",
+      "postCode": "100244",
+      "country": "Nigeria"
+    },
+    "items": [
+      {
+        "id": "cs5pz4ZA",
+        "name": "John Ughiovhe",
+        "quantity": 1,
+        "price": 300000,
+        "total": 300000
+      }
+    ],
+    "total": 300000
+  }
+]

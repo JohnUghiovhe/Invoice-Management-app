@@ -89,7 +89,7 @@ export async function updateInvoice(
   }
 
   const current = invoices[index];
-  const nextStatus: InvoiceStatus = asDraft ? "draft" : current.status === "paid" ? "paid" : "pending";
+  const nextStatus: InvoiceStatus = current.status === "paid" ? "paid" : asDraft ? "draft" : "pending";
 
   invoices[index] = toInvoice(payload, current.id, nextStatus);
 

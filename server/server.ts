@@ -33,7 +33,8 @@ app.get("/api/invoices", async (req: Request, res: Response, next: NextFunction)
 
 app.get("/api/invoices/:id", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const invoice = await getInvoiceById(req.params.id);
+    const invoiceId = String(req.params.id);
+    const invoice = await getInvoiceById(invoiceId);
 
     if (!invoice) {
       throw new AppError("Invoice not found", 404);
@@ -58,9 +59,10 @@ app.post("/api/invoices", async (req: Request, res: Response, next: NextFunction
 
 app.put("/api/invoices/:id", async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const invoiceId = String(req.params.id);
     const payload = parseInvoicePayload(req.body);
     const asDraft = req.query.draft === "true";
-    const invoice = await updateInvoice(req.params.id, payload, asDraft);
+    const invoice = await updateInvoice(invoiceId, payload, asDraft);
 
     if (!invoice) {
       throw new AppError("Invoice not found", 404);
@@ -74,7 +76,8 @@ app.put("/api/invoices/:id", async (req: Request, res: Response, next: NextFunct
 
 app.patch("/api/invoices/:id/mark-paid", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const invoice = await markInvoicePaid(req.params.id);
+    const invoiceId = String(req.params.id);
+    const invoice = await markInvoicePaid(invoiceId);
 
     if (!invoice) {
       throw new AppError("Invoice not found", 404);
@@ -92,7 +95,8 @@ app.patch("/api/invoices/:id/mark-paid", async (req: Request, res: Response, nex
 
 app.delete("/api/invoices/:id", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const deleted = await deleteInvoice(req.params.id);
+    const invoiceId = String(req.params.id);
+    const deleted = await deleteInvoice(invoiceId);
 
     if (!deleted) {
       throw new AppError("Invoice not found", 404);
