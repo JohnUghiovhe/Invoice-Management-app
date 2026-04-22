@@ -1,35 +1,52 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { nanoid } from "nanoid";
+import postgres from "postgres";
 import { type Invoice, type InvoiceStatus, type UpsertInvoicePayload } from "../types";
 
-const NETLIFY_STORE_NAME = "invoice-management-app";
-const NETLIFY_DATA_KEY = "invoices";
-
-const STORE_DIR = process.env.NETLIFY === "true"
-  ? path.join("/tmp", "invoice-store")
-  : path.resolve(process.cwd(), "server", "store");
+const DATABASE_URL = process.env.DATABASE_URL?.trim();
+const DATABASE_SCHEMA = "public";
+const DATABASE_TABLE = "invoices";
 const STORE_FILE = process.env.INVOICE_STORE_FILE
   ? path.resolve(process.env.INVOICE_STORE_FILE)
-  : path.join(STORE_DIR, "data.json");
+  : null;
 
-let netlifyStorePromise: Promise<any> | null = null;
+let databaseClient: ReturnType<typeof postgres> | null = null;
+let databaseInitPromise: Promise<void> | null = null;
 
-function isNetlifyRuntime() {
-  return process.env.NETLIFY === "true";
+function hasDatabaseConfig() {
+  return Boolean(DATABASE_URL);
 }
 
-async function getNetlifyStore() {
-  if (!netlifyStorePromise) {
-    netlifyStorePromise = import("@netlify/blobs").then(({ getStore }) => {
-      return getStore(NETLIFY_STORE_NAME, { consistency: "strong" });
+function getDatabaseClient() {
+  if (!hasDatabaseConfig()) {
+    throw new Error("Database is not configured. Set DATABASE_URL to your Supabase connection string.");
+  }
+
+  const connectionString = DATABASE_URL as string;
+
+  if (!databaseClient) {
+    databaseClient = postgres(connectionString, {
+      max: 1,
+      idle_timeout: 20,
+      connect_timeout: 10,
+      ssl: "require",
+      prepare: false
     });
   }
 
-  return netlifyStorePromise;
+  return databaseClient;
+}
+
+function hasFileStoreConfig() {
+  return Boolean(STORE_FILE);
 }
 
 async function ensureStore(): Promise<void> {
+  if (!STORE_FILE) {
+    throw new Error("DATABASE_URL is required. Set INVOICE_STORE_FILE only for tests or local file-based debugging.");
+  }
+
   await mkdir(path.dirname(STORE_FILE), { recursive: true });
 
   try {
@@ -39,35 +56,93 @@ async function ensureStore(): Promise<void> {
   }
 }
 
-async function readInvoices(): Promise<Invoice[]> {
-  if (isNetlifyRuntime()) {
-    const store = await getNetlifyStore();
-    if (!store) {
-      return [];
-    }
-
-    const invoices = await store.get(NETLIFY_DATA_KEY, { type: "json" });
-    return Array.isArray(invoices) ? invoices : [];
+async function ensureDatabaseSchema(): Promise<void> {
+  if (!hasDatabaseConfig()) {
+    return;
   }
 
+  if (!databaseInitPromise) {
+    databaseInitPromise = (async () => {
+      const sql = getDatabaseClient();
+
+      await sql.unsafe(`
+        create table if not exists public.invoices (
+          id text primary key,
+          status text not null check (status in ('draft', 'pending', 'paid')),
+          payload jsonb not null,
+          created_at timestamptz not null default now(),
+          updated_at timestamptz not null default now()
+        )
+      `);
+
+      await sql.unsafe(`
+        create or replace function public.set_invoice_updated_at()
+        returns trigger
+        language plpgsql
+        as $$
+        begin
+          new.updated_at = now();
+          return new;
+        end;
+        $$
+      `);
+
+      await sql.unsafe(`drop trigger if exists invoices_set_updated_at on public.invoices`);
+
+      await sql.unsafe(`
+        create trigger invoices_set_updated_at
+        before update on public.invoices
+        for each row
+        execute function public.set_invoice_updated_at()
+      `);
+    })();
+  }
+
+  await databaseInitPromise;
+}
+
+function parseInvoiceRecord(record: { payload: unknown }): Invoice {
+  return typeof record.payload === "string"
+    ? JSON.parse(record.payload) as Invoice
+    : record.payload as Invoice;
+}
+
+async function readInvoices(): Promise<Invoice[]> {
+  if (hasDatabaseConfig()) {
+    await ensureDatabaseSchema();
+
+    const sql = getDatabaseClient();
+    const invoices = await sql`
+      select payload
+      from ${sql.unsafe("public.invoices")}
+      order by created_at asc
+    `;
+
+    return (invoices as unknown as Array<{ payload: unknown }>).map(parseInvoiceRecord);
+  }
+
+  if (!hasFileStoreConfig()) {
+    throw new Error("DATABASE_URL is required for invoice storage.");
+  }
+
+  const storeFile = STORE_FILE as string;
   await ensureStore();
-  const raw = await readFile(STORE_FILE, "utf-8");
+  const raw = await readFile(storeFile, "utf-8");
   return JSON.parse(raw) as Invoice[];
 }
 
 async function writeInvoices(invoices: Invoice[]): Promise<void> {
-  if (isNetlifyRuntime()) {
-    const store = await getNetlifyStore();
-    if (!store) {
-      throw new Error("Netlify Blobs store is unavailable");
-    }
-
-    await store.setJSON(NETLIFY_DATA_KEY, invoices);
+  if (hasDatabaseConfig()) {
     return;
   }
 
+  if (!hasFileStoreConfig()) {
+    throw new Error("DATABASE_URL is required for invoice storage.");
+  }
+
+  const storeFile = STORE_FILE as string;
   await ensureStore();
-  await writeFile(STORE_FILE, JSON.stringify(invoices, null, 2), "utf-8");
+  await writeFile(storeFile, JSON.stringify(invoices, null, 2), "utf-8");
 }
 
 function toInvoice(payload: UpsertInvoicePayload, existingId?: string, nextStatus?: InvoiceStatus): Invoice {
@@ -102,16 +177,62 @@ function toInvoice(payload: UpsertInvoicePayload, existingId?: string, nextStatu
 }
 
 export async function listInvoices(statuses: InvoiceStatus[]): Promise<Invoice[]> {
+  if (hasDatabaseConfig()) {
+    await ensureDatabaseSchema();
+
+    const sql = getDatabaseClient();
+    const invoices = await sql`
+      select payload
+      from ${sql.unsafe("public.invoices")}
+      where status = any(${statuses})
+      order by created_at asc
+    `;
+
+    return (invoices as unknown as Array<{ payload: unknown }>).map(parseInvoiceRecord);
+  }
+
   const invoices = await readInvoices();
   return invoices.filter((invoice) => statuses.includes(invoice.status));
 }
 
 export async function getInvoiceById(id: string): Promise<Invoice | null> {
+  if (hasDatabaseConfig()) {
+    await ensureDatabaseSchema();
+
+    const sql = getDatabaseClient();
+    const invoices = await sql`
+      select payload
+      from ${sql.unsafe("public.invoices")}
+      where id = ${id}
+      limit 1
+    `;
+
+    const [record] = invoices as unknown as Array<{ payload: unknown }>;
+    return record ? parseInvoiceRecord(record) : null;
+  }
+
   const invoices = await readInvoices();
   return invoices.find((invoice) => invoice.id === id) ?? null;
 }
 
 export async function createInvoice(payload: UpsertInvoicePayload, asDraft: boolean): Promise<Invoice> {
+  if (hasDatabaseConfig()) {
+    await ensureDatabaseSchema();
+
+    const sql = getDatabaseClient();
+    const invoice = toInvoice(payload, undefined, asDraft ? "draft" : "pending");
+    await sql`
+      insert into ${sql.unsafe("public.invoices")} ${sql(
+        { id: invoice.id, status: invoice.status, payload: invoice },
+        "id",
+        "status",
+        "payload"
+      )}
+    `;
+
+    return invoice;
+  }
+
   const invoices = await readInvoices();
   const invoice = toInvoice(payload, undefined, asDraft ? "draft" : "pending");
   invoices.push(invoice);
@@ -124,6 +245,27 @@ export async function updateInvoice(
   payload: UpsertInvoicePayload,
   asDraft: boolean
 ): Promise<Invoice | null> {
+  if (hasDatabaseConfig()) {
+    await ensureDatabaseSchema();
+
+    const sql = getDatabaseClient();
+    const current = await getInvoiceById(id);
+
+    if (!current) {
+      return null;
+    }
+
+    const nextStatus: InvoiceStatus = current.status === "paid" ? "paid" : asDraft ? "draft" : "pending";
+    const invoice = toInvoice(payload, current.id, nextStatus);
+    await sql`
+      update ${sql.unsafe("public.invoices")}
+      set ${sql({ status: invoice.status, payload: invoice }, "status", "payload")}
+      where id = ${id}
+    `;
+
+    return invoice;
+  }
+
   const invoices = await readInvoices();
   const index = invoices.findIndex((invoice) => invoice.id === id);
 
@@ -141,6 +283,34 @@ export async function updateInvoice(
 }
 
 export async function markInvoicePaid(id: string): Promise<Invoice | null> {
+  if (hasDatabaseConfig()) {
+    await ensureDatabaseSchema();
+
+    const sql = getDatabaseClient();
+    const current = await getInvoiceById(id);
+
+    if (!current) {
+      return null;
+    }
+
+    if (current.status !== "pending") {
+      return current;
+    }
+
+    const nextInvoice: Invoice = {
+      ...current,
+      status: "paid"
+    };
+
+    await sql`
+      update ${sql.unsafe("public.invoices")}
+      set ${sql({ status: "paid", payload: nextInvoice }, "status", "payload")}
+      where id = ${id}
+    `;
+
+    return nextInvoice;
+  }
+
   const invoices = await readInvoices();
   const index = invoices.findIndex((invoice) => invoice.id === id);
 
@@ -164,6 +334,19 @@ export async function markInvoicePaid(id: string): Promise<Invoice | null> {
 }
 
 export async function deleteInvoice(id: string): Promise<boolean> {
+  if (hasDatabaseConfig()) {
+    await ensureDatabaseSchema();
+
+    const sql = getDatabaseClient();
+    const invoices = await sql`
+      delete from ${sql.unsafe("public.invoices")}
+      where id = ${id}
+      returning id
+    `;
+
+    return (invoices as unknown as Array<{ id: string }>).length > 0;
+  }
+
   const invoices = await readInvoices();
   const nextInvoices = invoices.filter((invoice) => invoice.id !== id);
 

@@ -26,6 +26,18 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
     return;
   }
 
+  // Surface unexpected runtime failures in the dev terminal so we can diagnose them quickly.
+  // eslint-disable-next-line no-console
+  console.error(err);
+
+  if (err instanceof Error) {
+    const message = err.message.toLowerCase();
+    if (message.includes("database_url is required") || message.includes("enotfound") || message.includes("econnrefused") || message.includes("timed out")) {
+      res.status(503).json({ message: err.message });
+      return;
+    }
+  }
+
   if (err instanceof AppError) {
     res.status(err.statusCode).json({ message: err.message });
     return;
