@@ -4,7 +4,6 @@ import { nanoid } from "nanoid";
 import postgres from "postgres";
 import { type Invoice, type InvoiceStatus, type UpsertInvoicePayload } from "../types";
 
-const DATABASE_URL = process.env.DATABASE_URL?.trim();
 const DATABASE_SCHEMA = "public";
 const DATABASE_TABLE = "invoices";
 const STORE_FILE = process.env.INVOICE_STORE_FILE
@@ -13,17 +12,28 @@ const STORE_FILE = process.env.INVOICE_STORE_FILE
 
 let databaseClient: ReturnType<typeof postgres> | null = null;
 let databaseInitPromise: Promise<void> | null = null;
+let activeDatabaseUrl: string | null = null;
+
+function getDatabaseUrl() {
+  const value = process.env.DATABASE_URL?.trim();
+  return value && value.length > 0 ? value : null;
+}
 
 function hasDatabaseConfig() {
-  return Boolean(DATABASE_URL);
+  return Boolean(getDatabaseUrl());
 }
 
 function getDatabaseClient() {
-  if (!hasDatabaseConfig()) {
+  const connectionString = getDatabaseUrl();
+
+  if (!connectionString) {
     throw new Error("Database is not configured. Set DATABASE_URL to your Supabase connection string.");
   }
 
-  const connectionString = DATABASE_URL as string;
+  if (activeDatabaseUrl && activeDatabaseUrl !== connectionString) {
+    databaseClient = null;
+    databaseInitPromise = null;
+  }
 
   if (!databaseClient) {
     databaseClient = postgres(connectionString, {
@@ -33,6 +43,7 @@ function getDatabaseClient() {
       ssl: "require",
       prepare: false
     });
+    activeDatabaseUrl = connectionString;
   }
 
   return databaseClient;
