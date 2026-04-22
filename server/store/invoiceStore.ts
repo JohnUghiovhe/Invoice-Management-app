@@ -3,12 +3,31 @@ import path from "node:path";
 import { nanoid } from "nanoid";
 import { type Invoice, type InvoiceStatus, type UpsertInvoicePayload } from "../types";
 
+const NETLIFY_STORE_NAME = "invoice-management-app";
+const NETLIFY_DATA_KEY = "invoices";
+
 const STORE_DIR = process.env.NETLIFY === "true"
   ? path.join("/tmp", "invoice-store")
   : path.resolve(process.cwd(), "server", "store");
 const STORE_FILE = process.env.INVOICE_STORE_FILE
   ? path.resolve(process.env.INVOICE_STORE_FILE)
   : path.join(STORE_DIR, "data.json");
+
+let netlifyStorePromise: Promise<any> | null = null;
+
+function isNetlifyRuntime() {
+  return process.env.NETLIFY === "true";
+}
+
+async function getNetlifyStore() {
+  if (!netlifyStorePromise) {
+    netlifyStorePromise = import("@netlify/blobs").then(({ getStore }) => {
+      return getStore(NETLIFY_STORE_NAME, { consistency: "strong" });
+    });
+  }
+
+  return netlifyStorePromise;
+}
 
 async function ensureStore(): Promise<void> {
   await mkdir(path.dirname(STORE_FILE), { recursive: true });
@@ -21,12 +40,32 @@ async function ensureStore(): Promise<void> {
 }
 
 async function readInvoices(): Promise<Invoice[]> {
+  if (isNetlifyRuntime()) {
+    const store = await getNetlifyStore();
+    if (!store) {
+      return [];
+    }
+
+    const invoices = await store.get(NETLIFY_DATA_KEY, { type: "json" });
+    return Array.isArray(invoices) ? invoices : [];
+  }
+
   await ensureStore();
   const raw = await readFile(STORE_FILE, "utf-8");
   return JSON.parse(raw) as Invoice[];
 }
 
 async function writeInvoices(invoices: Invoice[]): Promise<void> {
+  if (isNetlifyRuntime()) {
+    const store = await getNetlifyStore();
+    if (!store) {
+      throw new Error("Netlify Blobs store is unavailable");
+    }
+
+    await store.setJSON(NETLIFY_DATA_KEY, invoices);
+    return;
+  }
+
   await ensureStore();
   await writeFile(STORE_FILE, JSON.stringify(invoices, null, 2), "utf-8");
 }
