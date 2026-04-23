@@ -124,21 +124,34 @@ export function InvoiceListPage() {
   return (
     <div className="min-h-screen lg:pl-36">
       <aside className="flex h-20 items-stretch justify-between rounded-tr-xl rounded-br-xl bg-ink-700 pl-0 pr-4 shadow-lg sm:pr-6 lg:hidden">
-        <div className="relative h-full w-[72px] bg-brand-500" aria-label="Invoice logo" title="Invoice logo">
-          <div className="absolute bottom-0 left-0 h-8 w-full bg-brand-400/55" aria-hidden="true" />
-          <div className="absolute left-1/2 top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" aria-hidden="true" />
-          <div className="absolute left-1/2 top-[26%] h-4 w-4 -translate-x-1/2 bg-brand-500" style={{ clipPath: "polygon(50% 0%, 100% 100%, 0% 100%)" }} aria-hidden="true" />
+        <div className="relative h-full w-[72px] overflow-hidden rounded-tr-xl rounded-br-xl bg-brand-500" aria-label="Invoice logo" title="Invoice logo">
+          <div className="absolute bottom-0 left-0 h-10 w-full bg-brand-400/45" aria-hidden="true" />
+          <div className="absolute left-1/2 top-1/2 z-10 h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" aria-hidden="true" />
+          <div
+            className="absolute left-1/2 top-[23%] z-20 h-5 w-7 -translate-x-1/2 bg-brand-500"
+            style={{ clipPath: "polygon(0% 0%, 50% 100%, 100% 0%)" }}
+            aria-hidden="true"
+          />
         </div>
 
         <div className="flex items-center gap-4">
           <button
             type="button"
             onClick={toggleTheme}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-ink-400/40 bg-ink-600/65 transition hover:border-brand-300 hover:bg-ink-500/80"
+            className="inline-flex h-7 w-7 items-center justify-center transition hover:opacity-80"
             aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
           >
-            <span className={`h-2.5 w-2.5 rounded-full ${theme === "dark" ? "bg-ink-100" : "bg-brand-300"}`} aria-hidden="true" />
+            {theme === "dark" ? (
+              <span className="h-3.5 w-3.5 rounded-full bg-[#b9a7ff]" aria-hidden="true" />
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="text-[#b9a7ff]">
+                <path
+                  d="M21 14.5A9 9 0 1 1 8.2 3.2a6 6 0 1 0 12.8 11.3Z"
+                  fill="currentColor"
+                />
+              </svg>
+            )}
           </button>
 
           <button
@@ -155,10 +168,14 @@ export function InvoiceListPage() {
       </aside>
 
       <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-20 lg:flex lg:w-24 lg:flex-col lg:overflow-hidden lg:rounded-tr-xl lg:rounded-br-xl lg:bg-ink-700 lg:shadow-2xl">
-        <div className="relative flex h-24 items-center justify-center bg-brand-500">
-          <div className="absolute bottom-0 left-0 h-12 w-full bg-brand-400/55" aria-hidden="true" />
+        <div className="relative flex h-24 items-center justify-center overflow-hidden rounded-tr-xl rounded-br-xl bg-brand-500" aria-label="Invoice logo" title="Invoice logo">
+          <div className="absolute bottom-0 left-0 h-12 w-full bg-brand-400/45" aria-hidden="true" />
           <div className="relative z-10 h-11 w-11 rounded-full bg-white" aria-hidden="true" />
-          <div className="absolute left-1/2 top-[30%] z-20 h-5 w-5 -translate-x-1/2 bg-brand-500" style={{ clipPath: "polygon(50% 0%, 100% 100%, 0% 100%)" }} aria-label="Invoice logo" title="Invoice logo" />
+          <div
+            className="absolute left-1/2 top-[20%] z-20 h-7 w-8 -translate-x-1/2 bg-brand-500"
+            style={{ clipPath: "polygon(0% 0%, 50% 100%, 100% 0%)" }}
+            aria-hidden="true"
+          />
         </div>
 
         <div className="flex flex-1 flex-col justify-end">
@@ -166,14 +183,20 @@ export function InvoiceListPage() {
             <button
               type="button"
               onClick={toggleTheme}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-ink-400/40 bg-ink-600/60 transition hover:border-brand-300 hover:bg-ink-500/80"
+              className="inline-flex h-8 w-8 items-center justify-center transition hover:opacity-80"
               aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
               title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             >
-              <span
-                className={`h-2.5 w-2.5 rounded-full ${theme === "dark" ? "bg-ink-100" : "bg-brand-300"}`}
-                aria-hidden="true"
-              />
+              {theme === "dark" ? (
+                <span className="h-4 w-4 rounded-full bg-[#b9a7ff]" aria-hidden="true" />
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="text-[#b9a7ff]">
+                  <path
+                    d="M19.5 14.5A9 9 0 1 1 8.2 3.2a6 6 0 1 0 12.8 11.3Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              )}
             </button>
           </div>
 
@@ -204,7 +227,7 @@ export function InvoiceListPage() {
         </div>
       </aside>
 
-      <main className="mx-auto w-full max-w-5xl animate-rise px-4 pb-6 pt-0 sm:px-6 sm:pb-8 sm:pt-2 lg:px-10 lg:py-12">
+      <main className="mx-auto w-full max-w-5xl animate-rise px-4 pb-6 pt-4 sm:px-6 sm:pb-8 sm:pt-6 md:pt-7 lg:px-10 lg:py-12">
         <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-ink-900 dark:text-ink-100">Invoices</h1>
@@ -240,7 +263,7 @@ export function InvoiceListPage() {
               {dropdownOpen && (
                 <div
                   id="status-filter-menu"
-                  className="absolute right-0 top-full z-10 mt-3 w-56 rounded-xl border border-ink-200 bg-white p-3 shadow-xl dark:border-ink-700 dark:bg-ink-700"
+                  className="absolute left-0 top-full z-10 mt-3 w-56 max-w-[calc(100vw-2rem)] rounded-xl border border-ink-200 bg-white p-3 shadow-xl sm:left-auto sm:right-0 dark:border-ink-700 dark:bg-ink-700"
                 >
                   <div className="space-y-2">
                     {INVOICE_STATUSES.map((status) => {
