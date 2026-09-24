@@ -2,7 +2,6 @@ node_modules
 dist
 build
 .netlify
-.env
 .DS_Store
 temp_auto_push.bat
 temp_interactive_push.bat
@@ -12,3 +11,4 @@ server/store/data.db
 server/store/data.db-journal
 server/store/data.db-wal
 server/store/data.db-shm
+config.bat
