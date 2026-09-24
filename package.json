@@ -7,15 +7,15 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev": "node api.js && concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "tsx watch server/server.ts",
     "dev:client": "vite",
-    "build": "npm run build:client && npm run build:server",
+    "build": "node api.js && npm run build:client && npm run build:server",
     "build:client": "vite build",
     "build:server": "tsc -p tsconfig.server.json",
     "test": "vitest run --config vitest.config.mts",
     "test:watch": "vitest --config vitest.config.mts",
-    "start": "node dist/server.js"
+    "start": "node api.js && node dist/server.js"
   },
   "keywords": [],
   "author": "",
