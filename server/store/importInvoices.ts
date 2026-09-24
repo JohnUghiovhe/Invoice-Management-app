@@ -1,71 +1,68 @@
 import "dotenv/config";
 import { readFile } from "node:fs/promises";
-import postgres from "postgres";
+import path from "node:path";
+import Database from "better-sqlite3";
 import type { Invoice } from "../types.js";
+import { getStoreFile } from "./invoiceStore.js";
 
-const sourcePath = process.argv[2] ?? "C:/Users/ughio/Documents/data.json";
+const sourcePath = process.argv[2] ?? path.resolve(process.cwd(), "server/store/data.json");
 
 async function run() {
-  const databaseUrl = process.env.DATABASE_URL?.trim();
-
-  if (!databaseUrl) {
-    throw new Error("DATABASE_URL is missing in .env");
-  }
-
   const raw = await readFile(sourcePath, "utf-8");
   const invoices = JSON.parse(raw) as Invoice[];
 
-  const sql = postgres(databaseUrl, {
-    ssl: "require",
-    max: 1,
-    prepare: false
-  });
+  const storeFile = getStoreFile();
+  const sql: Database.Database = new Database(storeFile);
 
-  await sql.unsafe(`
-    create table if not exists public.invoices (
+  sql.exec(`
+    create table if not exists invoices (
       id text primary key,
       status text not null check (status in ('draft', 'pending', 'paid')),
-      payload jsonb not null,
-      created_at timestamptz not null default now(),
-      updated_at timestamptz not null default now()
-    )
+      payload text not null
+    );
+    create index if not exists invoices_status_idx on invoices(status);
+  `);
+
+  const upsert = sql.prepare(`
+    insert into invoices (id, status, payload)
+    values (@id, @status, @payload)
+    on conflict(id)
+    do update set
+      status = excluded.status,
+      payload = excluded.payload
   `);
 
   let upserted = 0;
 
-  for (const invoice of invoices) {
-    await sql`
-      insert into public.invoices (id, status, payload)
-      values (${invoice.id}, ${invoice.status}, ${JSON.stringify(invoice)}::jsonb)
-      on conflict (id)
-      do update set
-        status = excluded.status,
-        payload = excluded.payload
-    `;
+  const apply = sql.transaction((items: Invoice[]) => {
+    for (const invoice of items) {
+      upsert.run({
+        id: invoice.id,
+        status: invoice.status,
+        payload: JSON.stringify(invoice)
+      });
+      upserted += 1;
+    }
+  });
 
-    upserted += 1;
-  }
+  apply(invoices);
 
-  const countResult = await sql<{ count: number }[]>`
-    select count(*)::int as count
-    from public.invoices
-  `;
+  const result = sql.prepare("select count(*) as count from invoices").get() as { count: number };
 
-  // eslint-disable-next-line no-console
   console.log(
     JSON.stringify({
       sourcePath,
+      storeFile,
       imported: invoices.length,
       upserted,
-      finalCount: countResult[0]?.count ?? 0
+      finalCount: result.count ?? 0
     })
   );
 
-  await sql.end();
+  sql.close();
 }
 
 run().catch((error: unknown) => {
-  // eslint-disable-next-line no-console
   console.error(error);
   process.exit(1);
 });

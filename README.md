@@ -4,9 +4,7 @@ A full-stack invoice management app with invoice CRUD, draft/pending/paid workfl
 
 ## Overview
 
-The app is built with React + TypeScript on the client and Express + TypeScript on the server. Invoice persistence now uses PostgreSQL through the `postgres` package, which works well with a Supabase database connection string on Netlify or locally.
-
-If `DATABASE_URL` is missing, the server falls back to a local JSON file store for development and test isolation. That fallback is not intended for production.
+The app is built with React + TypeScript on the client and Express + TypeScript on the server. Persistence uses an embedded SQLite database through `better-sqlite3`, so no external database service is required in dev or production. The schema is created automatically on first use; the database lives in a single local file.
 
 ## Feature Set
 
@@ -24,18 +22,18 @@ If `DATABASE_URL` is missing, the server falls back to a local JSON file store f
 
 - React 18
 - TypeScript
-- React Router DOM 6
+- React Router DOM 7
 - Tailwind CSS 3
 - Vite 7
 
 ### Backend
 
-- Node.js 20+
+- Node.js 22+
 - Express 5
-- TypeScript
+- TypeScript (native ESM)
 - Zod
 - nanoid
-- postgres
+- better-sqlite3 (embedded SQLite)
 
 ### Testing
 
@@ -52,7 +50,7 @@ If `DATABASE_URL` is missing, the server falls back to a local JSON file store f
 │  ├─ middleware/errorHandler.ts
 │  ├─ store/
 │  │  ├─ invoiceStore.ts
-│  │  └─ schema.sql
+│  │  └─ importInvoices.ts
 │  ├─ validation/invoiceSchema.ts
 │  └─ types.ts
 ├─ src/
@@ -102,7 +100,7 @@ React UI
   -> Express routes (/api/*)
   -> validation layer
   -> invoice store
-  -> PostgreSQL or local JSON fallback
+  -> embedded SQLite database
 ```
 
 ### Server Design
@@ -112,40 +110,35 @@ React UI
 - `invoiceStore.ts` owns persistence and business rules.
 - `errorHandler.ts` normalizes validation and app errors.
 
-## Database Setup
+## Database
 
-The app expects a Supabase Postgres connection string in `DATABASE_URL`.
+The app uses an embedded SQLite database (via `better-sqlite3`); there is no external database service.
 
-### Automatic schema bootstrap
+- The database file defaults to `server/store/data.db` and is created automatically on first use.
+- The `invoices` table is created with a `CHECK` on status (`draft`, `pending`, `paid`) and stores the full invoice JSON in a `payload` column.
+- Set `INVOICE_STORE_FILE` to any writable path to relocate the database file (this is how tests isolate themselves, and how you'd point at a persistent volume in production).
 
-When `DATABASE_URL` is set, the server creates the `public.invoices` table and trigger automatically on first use.
+### Importing existing JSON data
 
-### Manual schema
+[JSON files from the legacy file store or Postgres exports](server/store/importInvoices.ts) can be imported with:
 
-You can also run [server/store/schema.sql](server/store/schema.sql) directly in your SQL editor.
-
-### Required table shape
-
-- `id` text primary key
-- `status` text check constrained to `draft`, `pending`, or `paid`
-- `payload` jsonb containing the full invoice object
-- `created_at` timestamptz
-- `updated_at` timestamptz
+```bash
+npx tsx server/store/importInvoices.ts path/to/invoices.json
+```
 
 ## Environment Variables
 
 Create a local `.env` file with:
 
 ```env
-DATABASE_URL=
 PORT=4000
 ```
 
 Optional:
 
-- `INVOICE_STORE_FILE` for a custom JSON fallback path during tests or debugging
+- `INVOICE_STORE_FILE` for a custom SQLite database path (required on platforms without a persistent working directory, e.g. a mounted volume).
 
-The server and Netlify function both load `.env` automatically.
+The server loads `.env` automatically.
 
 ## Running Locally
 
@@ -210,37 +203,27 @@ Base path: `/api`
 npm test
 ```
 
-Tests use a temporary `INVOICE_STORE_FILE` so they do not touch your local database.
+Tests use a temporary SQLite file so they do not touch your local database.
 
-## Netlify Deployment
+## Deployment
 
-### Build settings
+Because SQLite is a local file database, production needs a persistent filesystem. The recommended setup is a long-running Node server (e.g. Railway, a VPS, or a container) with a mounted volume:
 
-- Build command: `npm run build`
-- Publish directory: `dist`
-- Functions directory: `netlify/functions`
+1. Push the repository to your host.
+2. Set `INVOICE_STORE_FILE` to a path inside the persistent volume (e.g. `/data/invoices.db`).
+3. Run `npm run build && npm start`.
 
-### Environment variables in Netlify
+### Netlify note
 
-- `DATABASE_URL` with your Supabase connection string
-- `PORT` if you want to override the default locally
-
-### Deployment flow
-
-1. Push the repository to GitHub.
-2. Import the repo into Netlify.
-3. Add `DATABASE_URL` in Netlify site settings.
-4. Deploy.
-5. Verify the API through `/api/health` and the invoice CRUD screens.
+Netlify Functions run on ephemeral filesystems, so a file-based SQLite database does **not** persist across function invocations there. Use the standalone server deployment above if you need durable storage.
 
 ## Troubleshooting
 
-- If `netlify build` is not recognized in PowerShell, run `npx netlify-cli build` or install Netlify CLI globally.
-- If the app cannot connect to Postgres, verify that `DATABASE_URL` is set and includes the correct Supabase password and `sslmode=require`.
-- If you want to reset local fallback data, delete the generated file at `server/store/data.json` or point `INVOICE_STORE_FILE` elsewhere.
+- If the app fails to start, confirm you are on Node 22.12+ (`node -v`).
+- If writes appear to be lost, verify `INVOICE_STORE_FILE` points to a persistent volume on your host.
+- To reset local data, stop the server and delete `server/store/data.db` (the schema is recreated on the next start).
 
 ## Notes
 
-- Production should use PostgreSQL.
-- The file fallback only exists to keep local development and tests simple when no database is configured.
-- The app no longer depends on Netlify Blobs or the Supabase JS client.
+- Production should run on a long-running server with a persistent volume for the SQLite file.
+- The app no longer depends on PostgreSQL, Supabase, Netlify Blobs, or any external database.

@@ -1,6 +1,7 @@
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
+import Database from "better-sqlite3";
 import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Express } from "express";
@@ -136,8 +137,22 @@ let app: Express;
 
 beforeAll(async () => {
   tempDir = await mkdtemp(path.join(os.tmpdir(), "invoice-app-tests-"));
-  storeFile = path.join(tempDir, "data.json");
-  await writeFile(storeFile, JSON.stringify(seedInvoices, null, 2), "utf-8");
+  storeFile = path.join(tempDir, "data.db");
+
+  const db = new Database(storeFile);
+  db.exec(`
+    create table if not exists invoices (
+      id text primary key,
+      status text not null check (status in ('draft', 'pending', 'paid')),
+      payload text not null
+    );
+  `);
+  const insert = db.prepare("insert into invoices (id, status, payload) values (?, ?, ?)");
+  for (const invoice of seedInvoices) {
+    insert.run(invoice.id, invoice.status, JSON.stringify(invoice));
+  }
+  db.close();
+
   process.env.INVOICE_STORE_FILE = storeFile;
 
   const appModule = await import("../server/app");
@@ -145,6 +160,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  const { closeDatabase } = await import("../server/store/invoiceStore.js");
+  closeDatabase();
   delete process.env.INVOICE_STORE_FILE;
   if (tempDir) {
     await rm(tempDir, { recursive: true, force: true });
@@ -203,8 +220,10 @@ describe("invoice API", () => {
     const deleteResponse = await client.delete(`/api/invoices/${createResponse.body.id}`);
     expect(deleteResponse.status).toBe(204);
 
-    const stored = JSON.parse(await readFile(String(storeFile), "utf-8")) as Array<{ id: string }>;
-    expect(stored.find((invoice) => invoice.id === createResponse.body.id)).toBeUndefined();
+    const db = new Database(String(storeFile));
+    const row = db.prepare("select id from invoices where id = ?").get(createResponse.body.id);
+    expect(row).toBeUndefined();
+    db.close();
   });
 
   it("rejects mark-paid for non-pending invoices", async () => {

@@ -8,3 +8,7 @@ temp_auto_push.bat
 temp_interactive_push.bat
 .gitignore
 branch_structure.json
+server/store/data.db
+server/store/data.db-journal
+server/store/data.db-wal
+server/store/data.db-shm
