@@ -4,7 +4,7 @@ A full-stack invoice management app with invoice CRUD, draft/pending/paid workfl
 
 ## Overview
 
-The app is built with React + TypeScript on the client and Express + TypeScript on the server. Persistence uses an embedded SQLite database through `better-sqlite3`, so no external database service is required in dev or production. The schema is created automatically on first use; the database lives in a single local file.
+The app is built with React + TypeScript on the client and Express + TypeScript on the server. Persistence needs no external database service: it uses an embedded SQLite database (via `better-sqlite3`) in local development, and Netlify Blobs (Netlify's own managed storage) when the API runs as a Netlify Function.
 
 ## Feature Set
 
@@ -33,7 +33,8 @@ The app is built with React + TypeScript on the client and Express + TypeScript 
 - TypeScript (native ESM)
 - Zod
 - nanoid
-- better-sqlite3 (embedded SQLite)
+- better-sqlite3 (embedded SQLite, local dev)
+- @netlify/blobs (durable storage on Netlify Functions)
 
 ### Testing
 
@@ -100,7 +101,7 @@ React UI
   -> Express routes (/api/*)
   -> validation layer
   -> invoice store
-  -> embedded SQLite database
+  -> SQLite (local server) or Netlify Blobs (Netlify Functions)
 ```
 
 ### Server Design
@@ -112,11 +113,23 @@ React UI
 
 ## Database
 
-The app uses an embedded SQLite database (via `better-sqlite3`); there is no external database service.
+The store adapts to the runtime automatically.
+
+### Local development (standalone server)
+
+Uses an embedded SQLite database (via `better-sqlite3`):
 
 - The database file defaults to `server/store/data.db` and is created automatically on first use.
 - The `invoices` table is created with a `CHECK` on status (`draft`, `pending`, `paid`) and stores the full invoice JSON in a `payload` column.
-- Set `INVOICE_STORE_FILE` to any writable path to relocate the database file (this is how tests isolate themselves, and how you'd point at a persistent volume in production).
+- Set `INVOICE_STORE_FILE` to any writable path to relocate the database file (this is how tests isolate themselves, and how you'd point at a persistent volume).
+
+### Netlify Functions
+
+When the API runs inside a Netlify Function (`process.env.NETLIFY === "true"`), persistence switches to [Netlify Blobs](https://docs.netlify.com/blobs/overview/):
+
+- All invoices are stored under a single `invoices` key in a store named `invoice-management-app`.
+- No extra setup is required — the Functions runtime supplies the Blobs credentials automatically, and data persists across cold starts.
+- This is what makes the deployed site durable on Netlify despite its ephemeral filesystem.
 
 ### Importing existing JSON data
 
@@ -207,15 +220,20 @@ Tests use a temporary SQLite file so they do not touch your local database.
 
 ## Deployment
 
-Because SQLite is a local file database, production needs a persistent filesystem. The recommended setup is a long-running Node server (e.g. Railway, a VPS, or a container) with a mounted volume:
+Two runtimes are supported:
 
-1. Push the repository to your host.
-2. Set `INVOICE_STORE_FILE` to a path inside the persistent volume (e.g. `/data/invoices.db`).
-3. Run `npm run build && npm start`.
+### Netlify
 
-### Netlify note
+1. Connect the GitHub repo to Netlify (build command `npm run build`, publish dir `dist`, functions dir `netlify/functions`).
+2. Deploy. The API runs as a Netlify Function and persists data to Netlify Blobs automatically. No environment variables are required.
+3. Verify `/api/health` and the invoice CRUD screens.
 
-Netlify Functions run on ephemeral filesystems, so a file-based SQLite database does **not** persist across function invocations there. Use the standalone server deployment above if you need durable storage.
+### Long-running server
+
+To run the standalone server (e.g. Railway, a VPS, or a container):
+
+1. Set `INVOICE_STORE_FILE` to a path inside a persistent volume (e.g. `/data/invoices.db`).
+2. Run `npm run build && npm start`.
 
 ## Troubleshooting
 
@@ -225,5 +243,5 @@ Netlify Functions run on ephemeral filesystems, so a file-based SQLite database 
 
 ## Notes
 
-- Production should run on a long-running server with a persistent volume for the SQLite file.
-- The app no longer depends on PostgreSQL, Supabase, Netlify Blobs, or any external database.
+- Local development uses embedded SQLite; Netlify deployments use Netlify Blobs.
+- The app no longer depends on PostgreSQL, Supabase, or any third-party database service.

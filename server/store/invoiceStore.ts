@@ -4,12 +4,16 @@ import { nanoid } from "nanoid";
 import Database from "better-sqlite3";
 import { type Invoice, type InvoiceStatus, type UpsertInvoicePayload } from "../types.js";
 
+const NETLIFY_STORE_NAME = "invoice-management-app";
+const NETLIFY_DATA_KEY = "invoices";
+
 const STORE_FILE = path.resolve(
   process.env.INVOICE_STORE_FILE ?? path.join(process.cwd(), "server/store/data.db")
 );
 
 let database: Database.Database | null = null;
 let databaseInitPromise: Promise<void> | null = null;
+let netlifyStorePromise: Promise<import("@netlify/blobs").Store | null> | null = null;
 
 export function getStoreFile(): string {
   return STORE_FILE;
@@ -19,6 +23,45 @@ export function closeDatabase(): void {
   databaseInitPromise = null;
   database?.close();
   database = null;
+}
+
+function isNetlifyRuntime(): boolean {
+  return process.env.NETLIFY === "true" || Boolean(process.env.NETLIFY_BLOBS_ACCESS_TOKEN);
+}
+
+function getBlobsStore(): Promise<import("@netlify/blobs").Store | null> {
+  if (!netlifyStorePromise) {
+    netlifyStorePromise = import("@netlify/blobs")
+      .then(({ getStore }) => getStore({ name: NETLIFY_STORE_NAME, consistency: "strong" }))
+      .catch((error: unknown) => {
+        // eslint-disable-next-line no-console
+        console.error("Failed to initialize Netlify Blobs store:", error);
+        return null;
+      });
+  }
+
+  return netlifyStorePromise;
+}
+
+async function readNetlifyInvoices(): Promise<Invoice[]> {
+  const store = await getBlobsStore();
+
+  if (!store) {
+    return [];
+  }
+
+  const invoices = await store.get(NETLIFY_DATA_KEY, { type: "json" });
+  return Array.isArray(invoices) ? (invoices as Invoice[]) : [];
+}
+
+async function writeNetlifyInvoices(invoices: Invoice[]): Promise<void> {
+  const store = await getBlobsStore();
+
+  if (!store) {
+    throw new Error("Netlify Blobs store is unavailable");
+  }
+
+  await store.setJSON(NETLIFY_DATA_KEY, invoices);
 }
 
 function getDatabase(): Database.Database {
@@ -90,6 +133,11 @@ function toInvoice(payload: UpsertInvoicePayload, existingId?: string, nextStatu
 }
 
 export async function listInvoices(statuses: InvoiceStatus[]): Promise<Invoice[]> {
+  if (isNetlifyRuntime()) {
+    const invoices = await readNetlifyInvoices();
+    return invoices.filter((invoice) => statuses.includes(invoice.status));
+  }
+
   if (statuses.length === 0) {
     return [];
   }
@@ -106,6 +154,11 @@ export async function listInvoices(statuses: InvoiceStatus[]): Promise<Invoice[]
 }
 
 export async function getInvoiceById(id: string): Promise<Invoice | null> {
+  if (isNetlifyRuntime()) {
+    const invoices = await readNetlifyInvoices();
+    return invoices.find((invoice) => invoice.id === id) ?? null;
+  }
+
   await ensureSchema();
   const db = getDatabase();
 
@@ -117,11 +170,17 @@ export async function getInvoiceById(id: string): Promise<Invoice | null> {
 }
 
 export async function createInvoice(payload: UpsertInvoicePayload, asDraft: boolean): Promise<Invoice> {
-  await ensureSchema();
-  const db = getDatabase();
-
   const invoice = toInvoice(payload, undefined, asDraft ? "draft" : "pending");
 
+  if (isNetlifyRuntime()) {
+    const invoices = await readNetlifyInvoices();
+    invoices.push(invoice);
+    await writeNetlifyInvoices(invoices);
+    return invoice;
+  }
+
+  await ensureSchema();
+  const db = getDatabase();
   db.prepare("insert into invoices (id, status, payload) values (?, ?, ?)").run(
     invoice.id,
     invoice.status,
@@ -136,6 +195,22 @@ export async function updateInvoice(
   payload: UpsertInvoicePayload,
   asDraft: boolean
 ): Promise<Invoice | null> {
+  if (isNetlifyRuntime()) {
+    const invoices = await readNetlifyInvoices();
+    const index = invoices.findIndex((invoice) => invoice.id === id);
+
+    if (index === -1) {
+      return null;
+    }
+
+    const current = invoices[index];
+    const nextStatus: InvoiceStatus = current.status === "paid" ? "paid" : asDraft ? "draft" : "pending";
+
+    invoices[index] = toInvoice(payload, current.id, nextStatus);
+    await writeNetlifyInvoices(invoices);
+    return invoices[index];
+  }
+
   await ensureSchema();
   const db = getDatabase();
 
@@ -175,6 +250,19 @@ export async function markInvoicePaid(id: string): Promise<Invoice | null> {
     status: "paid"
   };
 
+  if (isNetlifyRuntime()) {
+    const invoices = await readNetlifyInvoices();
+    const index = invoices.findIndex((invoice) => invoice.id === id);
+
+    if (index === -1) {
+      return null;
+    }
+
+    invoices[index] = nextInvoice;
+    await writeNetlifyInvoices(invoices);
+    return invoices[index];
+  }
+
   const db = getDatabase();
   db.prepare("update invoices set status = ?, payload = ? where id = ?").run(
     "paid",
@@ -186,6 +274,18 @@ export async function markInvoicePaid(id: string): Promise<Invoice | null> {
 }
 
 export async function deleteInvoice(id: string): Promise<boolean> {
+  if (isNetlifyRuntime()) {
+    const invoices = await readNetlifyInvoices();
+    const nextInvoices = invoices.filter((invoice) => invoice.id !== id);
+
+    if (nextInvoices.length === invoices.length) {
+      return false;
+    }
+
+    await writeNetlifyInvoices(nextInvoices);
+    return true;
+  }
+
   await ensureSchema();
   const db = getDatabase();
 
