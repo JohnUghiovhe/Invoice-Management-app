@@ -17,7 +17,10 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/api/health", (_req: Request, res: Response) => {
-  res.json({ status: "ok" });
+  res.json({
+    status: "ok",
+    store: process.env.NETLIFY === "true" ? "netlify-blobs" : "sqlite"
+  });
 });
 
 app.get("/api/invoices", async (req: Request, res: Response, next: NextFunction) => {
