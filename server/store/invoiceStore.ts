@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { nanoid } from "nanoid";
 import postgres from "postgres";
-import { type Invoice, type InvoiceStatus, type UpsertInvoicePayload } from "../types";
+import { type Invoice, type InvoiceStatus, type UpsertInvoicePayload } from "../types.js";
 
 const DATABASE_SCHEMA = "public";
 const DATABASE_TABLE = "invoices";

@@ -7,9 +7,9 @@ import {
   listInvoices,
   markInvoicePaid,
   updateInvoice
-} from "./store/invoiceStore";
-import { AppError, errorHandler, notFoundHandler } from "./middleware/errorHandler";
-import { parseInvoicePayload, parseStatusQuery } from "./validation/invoiceSchema";
+} from "./store/invoiceStore.js";
+import { AppError, errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
+import { parseInvoicePayload, parseStatusQuery } from "./validation/invoiceSchema.js";
 
 export const app = express();
 

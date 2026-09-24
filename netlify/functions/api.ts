@@ -1,6 +1,6 @@
 import "dotenv/config";
 import serverless from "serverless-http";
-import { app } from "../../server/app";
+import { app } from "../../server/app.js";
 
 export const handler = serverless(app, {
 		basePath: "/.netlify/functions/api"

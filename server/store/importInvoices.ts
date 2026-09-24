@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { readFile } from "node:fs/promises";
 import postgres from "postgres";
-import type { Invoice } from "../types";
+import type { Invoice } from "../types.js";
 
 const sourcePath = process.argv[2] ?? "C:/Users/ughio/Documents/data.json";
 

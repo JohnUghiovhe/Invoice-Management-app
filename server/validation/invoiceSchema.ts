@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { type InvoiceStatus, type UpsertInvoicePayload } from "../types";
+import { type InvoiceStatus, type UpsertInvoicePayload } from "../types.js";
 
 const addressSchema = z.object({
   street: z.string().trim().min(1, "Street is required"),
